@@ -13,6 +13,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
+
 import inject from '@rollup/plugin-inject'
 
 // https://vitejs.dev/config/
@@ -86,14 +88,6 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
-    build:
-      mode === 'production'
-        ? {
-            rollupOptions: {
-              plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
-            },
-          }
-        : undefined,
     define: { 'process.env': {} },
     resolve: {
       alias: {
@@ -109,20 +103,6 @@ export default defineConfig(({ mode }) => {
         '.vue',
       ],
     },
-    optimizeDeps: {
-      esbuildOptions: {
-        // Node.js global to browser globalThis
-        define: {
-          global: 'globalThis'
-        },
-        // Enable esbuild polyfill plugins
-        plugins: [
-          NodeGlobalsPolyfillPlugin({
-            buffer: true
-          }),
-        ]
-      },
-    },
     server: {
       host: true,
       allowedHosts: ['checkbnb.aymericdo.ovh'],
@@ -134,5 +114,33 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    optimizeDeps: {
+      esbuildOptions: {
+        // Node.js global to browser globalThis
+        define: {
+          global: 'globalThis'
+        },
+        // Enable esbuild polyfill plugins
+        plugins: [
+          NodeGlobalsPolyfillPlugin({
+            buffer: true
+          }),
+          NodeModulesPolyfillPlugin(),
+        ]
+      },
+    },
+    build: {
+      commonjsOptions: {
+        include: ['node_modules/**/*.js']
+      }
+    },
+    // build: {
+    //   rollupOptions: {
+    //     plugins: [
+    //       // @ts-expect-error Enable rollup polyfills plugin used during production bundling
+    //       rollupNodePolyFill(),
+    //     ]
+    //   }
+    // }
   }
 })
