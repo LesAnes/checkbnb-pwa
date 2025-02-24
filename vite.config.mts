@@ -131,7 +131,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       commonjsOptions: {
-        include: ['node_modules/**/*.js']
+        include: ['node_modules/buffer/index.js']
       }
     },
     // build: {
