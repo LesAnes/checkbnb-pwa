@@ -15,10 +15,10 @@ import { fileURLToPath, URL } from 'node:url'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
 
-import inject from '@rollup/plugin-inject'
+import rollupNodePolyFill from 'rollup-plugin-polyfill-node'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   return {
     plugins: [
       VueRouter({
@@ -130,17 +130,11 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      commonjsOptions: {
-        include: ['node_modules/buffer/index.js']
+      rollupOptions: {
+        plugins: [
+          rollupNodePolyFill()
+        ]
       }
-    },
-    // build: {
-    //   rollupOptions: {
-    //     plugins: [
-    //       // @ts-expect-error Enable rollup polyfills plugin used during production bundling
-    //       rollupNodePolyFill(),
-    //     ]
-    //   }
-    // }
+    }
   }
 })
