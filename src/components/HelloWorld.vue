@@ -30,6 +30,7 @@
           />
         </v-col>
         <div class="py-2"></div>
+
         <v-divider />
         <v-col cols="6">
           <v-file-upload
