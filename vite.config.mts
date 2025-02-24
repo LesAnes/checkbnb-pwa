@@ -99,17 +99,6 @@ export default defineConfig({
       '.vue',
     ],
   },
-  server: {
-    host: true,
-    allowedHosts: ['checkbnb.aymericdo.ovh'],
-  },
-  css: {
-    preprocessorOptions: {
-      sass: {
-        api: 'modern-compiler',
-      },
-    },
-  },
   optimizeDeps: {
     esbuildOptions: {
       // Node.js global to browser globalThis
@@ -122,6 +111,17 @@ export default defineConfig({
           buffer: true
         }),
       ]
+    },
+  },
+  server: {
+    host: true,
+    allowedHosts: ['checkbnb.aymericdo.ovh'],
+  },
+  css: {
+    preprocessorOptions: {
+      sass: {
+        api: 'modern-compiler',
+      },
     },
   }
 })
