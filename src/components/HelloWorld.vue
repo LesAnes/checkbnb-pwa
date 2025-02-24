@@ -42,6 +42,7 @@
             @update:model-value="updateFile($event, 'airbnb')"
           />
         </v-col>
+
         <v-col cols="6">
           <v-file-upload
             density="compact"
