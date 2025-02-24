@@ -26,7 +26,7 @@
             icon="mdi-upload"
             title="Fichier Téléservice"
             accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            @update:model-value="updateFile($event, 'teleservice')"
+            @update:model-value="updateFile($event as unknown as File, 'teleservice')"
           />
         </v-col>
         <div class="py-2"></div>
@@ -39,7 +39,7 @@
             icon="mdi-upload"
             title="Fichier Airbnb"
             accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            @update:model-value="updateFile($event, 'airbnb')"
+            @update:model-value="updateFile($event as unknown as File, 'airbnb')"
           />
         </v-col>
 
@@ -51,7 +51,7 @@
             icon="mdi-upload"
             title="Fichier Booking"
             accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            @update:model-value="updateFile($event, 'booking')"
+            @update:model-value="updateFile($event as unknown as File, 'booking')"
           />
         </v-col>
       </v-row>
@@ -83,16 +83,20 @@
   import { read, utils } from 'xlsx'
   import { parse } from "csv-parse/sync"
 
-  const files = {}
+  const files: {
+    teleservice?: unknown[],
+    airbnb?: unknown[],
+    booking?: unknown[],
+  } = {}
 
-  const updateFile = (event, type: 'teleservice' | 'airbnb' | 'booking') => {
+  const updateFile = (event: File, type: 'teleservice' | 'airbnb' | 'booking') => {
     if (window.FileReader) {
       const reader = new FileReader();
       if (event.type === 'text/csv') {
         reader.readAsText(event, 'UTF-8');
 
         reader.onload = (e) => {
-          const records = parse(e.target.result, {
+          const records = parse(e.target!.result as Buffer, {
             columns: true,
             skip_empty_lines: true
           });
@@ -101,10 +105,10 @@
           console.log(files)
         };
       } else if (event.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        reader.readAsArrayBuffer(event, 'UTF-8')
+        reader.readAsArrayBuffer(event)
 
         reader.onload = (e) => {
-          const data = new Uint8Array(e.target.result);
+          const data = new Uint8Array(e.target!.result as ArrayBufferLike)
           const workbook = read(data, { type: "array" })
           const sheetNameList = workbook.SheetNames;
 
@@ -116,7 +120,7 @@
       }
 
       reader.onerror = (evt) => {
-        if (evt.target.error.name == "NotReadableError") {
+        if (evt.target?.error?.name === "NotReadableError") {
           alert("Cannot read file !");
         }
       };
