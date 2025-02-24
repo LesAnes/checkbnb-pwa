@@ -13,114 +13,125 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill'
+import inject from '@rollup/plugin-inject'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    VueRouter({
-      dts: 'src/typed-router.d.ts',
-    }),
-    Layouts(),
-    AutoImport({
-      imports: [
-        'vue',
-        {
-          'vue-router/auto': ['useRoute', 'useRouter'],
-        }
-      ],
-      dts: 'src/auto-imports.d.ts',
-      eslintrc: {
-        enabled: true,
-      },
-      vueTemplate: true,
-    }),
-    VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
-      workbox: {
-        cleanupOutdatedCaches: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
-      },
-      manifest: {
-        short_name: 'checkBnb',
-        name: 'CheckBnb',
-        theme_color: '#ffc344',
-        background_color: '#8090ae',
-        scope: "./",
-        start_url: "./",
-        orientation: 'portrait',
-        display: 'standalone',
-        icons: [{
-          "src": "/android-chrome-192x192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+export default defineConfig(({ mode }) => {
+  return {
+    plugins: [
+      VueRouter({
+        dts: 'src/typed-router.d.ts',
+      }),
+      Layouts(),
+      AutoImport({
+        imports: [
+          'vue',
+          {
+            'vue-router/auto': ['useRoute', 'useRouter'],
+          }
+        ],
+        dts: 'src/auto-imports.d.ts',
+        eslintrc: {
+          enabled: true,
         },
-        {
-          "src": "/android-chrome-512x512.png",
-          "sizes": "512x512",
-          "type": "image/png"
-        }],
-      },
-    }),
-    Components({
-      dts: 'src/components.d.ts',
-    }),
-    Vue({
-      template: { transformAssetUrls },
-    }),
-    // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
-    Vuetify({
-      autoImport: true,
-      styles: {
-        configFile: 'src/styles/settings.scss',
-      },
-    }),
-    Fonts({
-      google: {
-        families: [ {
-          name: 'Roboto',
-          styles: 'wght@100;300;400;500;700;900',
-        }],
-      },
-    }),
-  ],
-  define: { 'process.env': {} },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-    extensions: [
-      '.js',
-      '.json',
-      '.jsx',
-      '.mjs',
-      '.ts',
-      '.tsx',
-      '.vue',
+        vueTemplate: true,
+      }),
+      VitePWA({
+        registerType: 'autoUpdate',
+        injectRegister: 'auto',
+        workbox: {
+          cleanupOutdatedCaches: true,
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
+        },
+        manifest: {
+          short_name: 'checkBnb',
+          name: 'CheckBnb',
+          theme_color: '#ffc344',
+          background_color: '#8090ae',
+          scope: "./",
+          start_url: "./",
+          orientation: 'portrait',
+          display: 'standalone',
+          icons: [{
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+          },
+          {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+          }],
+        },
+      }),
+      Components({
+        dts: 'src/components.d.ts',
+      }),
+      Vue({
+        template: { transformAssetUrls },
+      }),
+      // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
+      Vuetify({
+        autoImport: true,
+        styles: {
+          configFile: 'src/styles/settings.scss',
+        },
+      }),
+      Fonts({
+        google: {
+          families: [ {
+            name: 'Roboto',
+            styles: 'wght@100;300;400;500;700;900',
+          }],
+        },
+      }),
     ],
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      // Node.js global to browser globalThis
-      define: {
-        global: 'globalThis'
+    build:
+      mode === 'production'
+        ? {
+            rollupOptions: {
+              plugins: [inject({ Buffer: ['buffer', 'Buffer'] })],
+            },
+          }
+        : undefined,
+    define: { 'process.env': {} },
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
-      // Enable esbuild polyfill plugins
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true
-        }),
-      ]
+      extensions: [
+        '.js',
+        '.json',
+        '.jsx',
+        '.mjs',
+        '.ts',
+        '.tsx',
+        '.vue',
+      ],
     },
-  },
-  server: {
-    host: true,
-    allowedHosts: ['checkbnb.aymericdo.ovh'],
-  },
-  css: {
-    preprocessorOptions: {
-      sass: {
-        api: 'modern-compiler',
+    optimizeDeps: {
+      esbuildOptions: {
+        // Node.js global to browser globalThis
+        define: {
+          global: 'globalThis'
+        },
+        // Enable esbuild polyfill plugins
+        plugins: [
+          NodeGlobalsPolyfillPlugin({
+            buffer: true
+          }),
+        ]
+      },
+    },
+    server: {
+      host: true,
+      allowedHosts: ['checkbnb.aymericdo.ovh'],
+    },
+    css: {
+      preprocessorOptions: {
+        sass: {
+          api: 'modern-compiler',
+        },
       },
     },
   }
