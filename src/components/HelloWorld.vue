@@ -1,8 +1,7 @@
 <template>
   <v-container class="fill-height">
     <v-responsive
-      class="align-centerfill-height mx-auto"
-      max-width="900"
+      class="align-center fill-height mx-auto"
     >
       <v-row>
         <v-col cols="12">
