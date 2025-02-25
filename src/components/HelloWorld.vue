@@ -6,7 +6,7 @@
     >
       <v-row>
         <v-col cols="12">
-          <h1 class="text-h3 font-weight-bold">
+          <h1 class="text-h3 font-weight-bold text-amber-lighten-1">
             Analyse des données
           </h1>
         </v-col>
@@ -19,43 +19,40 @@
 
           <div class="py-2"></div>
 
-          <v-file-upload
-            density="compact"
-            browse-text="Système de fichiers local"
-            divider-text="ou"
-            icon="mdi-upload"
+          <UploadFile
             title="Fichier Téléservice"
-            accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            @update:model-value="updateFile($event as unknown as File, 'teleservice')"
+            @update-doc="teleservice = $event"
           />
         </v-col>
         <div class="py-2"></div>
 
         <v-divider />
+      </v-row>
+
+      <v-row v-if="teleservice">
         <v-col cols="6">
-          <v-file-upload
-            density="compact"
-            browse-text="Système de fichiers local"
-            divider-text="ou"
-            icon="mdi-upload"
+          <UploadFile
             title="Fichier Airbnb"
-            accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            @update:model-value="updateFile($event as unknown as File, 'airbnb')"
+            @update-doc="setFile('airbnb', $event)"
           />
         </v-col>
 
         <v-col cols="6">
-          <v-file-upload
-            density="compact"
-            browse-text="Système de fichiers local"
-            divider-text="ou"
-            icon="mdi-upload"
+          <UploadFile
             title="Fichier Booking"
-            accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            @update:model-value="updateFile($event as unknown as File, 'booking')"
+            @update-doc="setFile('booking', $event)"
           />
         </v-col>
       </v-row>
+
+      <v-progress-circular
+        v-if="loading"
+        class="ma-4 position-fixed top-0 right-0"
+        :size="80"
+        color="amber"
+        indeterminate
+      />
+
       <v-row>
         <v-col cols="12">
           <v-card
@@ -65,13 +62,113 @@
             variant="outlined"
           >
             <template #title>
-              <h2 class="text-h5 font-weight-bold">
+              <h2 class="text-h5 text-center font-weight-bold">
                 Résultat
               </h2>
             </template>
 
             <template #subtitle>
-              <span>coucou</span>
+              <v-tabs
+                v-model="tab"
+                color="amber-lighten-1"
+              >
+                <v-tab
+                  v-for="item in (Object.keys(files).length > 1 ? Object.keys(files).concat('comparatif'): Object.keys(files))"
+                  :key="item"
+                  :value="item"
+                >
+                  {{ item }}
+                </v-tab>
+              </v-tabs>
+
+              <v-card-text>
+                <v-tabs-window v-model="tab">
+                  <v-tabs-window-item
+                    v-for="item in (Object.keys(files).length > 1 ? Object.keys(files).concat('comparatif'): Object.keys(files))"
+                    :key="item"
+                    :value="item"
+                  >
+                    <template v-if="item !== 'comparatif'">
+                      <div class="py-2"></div>
+
+                      <h2>Nuitées {{ item }} ne correspondant pas à un id du téléservice</h2>
+
+                      <v-text-field
+                        v-model="unknownSearch"
+                        density="compact"
+                        label="Rechercher"
+                        prepend-inner-icon="mdi-magnify"
+                        variant="solo-filled"
+                        flat
+                        hide-details
+                        single-line
+                        class="mb-2"
+                      />
+
+                      <v-data-table
+                        v-model:search="unknownSearch"
+                        :items="files[item as keyof typeof files]!.unknownNights"
+                        density="compact"
+                      />
+
+                      <div class="py-2"></div>
+
+                      <h2>Nuitées {{ item }} en doublon</h2>
+
+                      <v-text-field
+                        v-model="duplicateSearch"
+                        density="compact"
+                        label="Rechercher"
+                        prepend-inner-icon="mdi-magnify"
+                        variant="solo-filled"
+                        flat
+                        hide-details
+                        single-line
+                        class="mb-2"
+                      />
+
+                      <v-data-table
+                        v-model:search="duplicateSearch"
+                        :items="files[item as keyof typeof files]!.duplicateNights"
+                        density="compact"
+                      />
+
+                      <div class="py-2"></div>
+
+                      <h2>Nuitées {{ item }} au format invalide</h2>
+
+                      <v-text-field
+                        v-model="invalidSearch"
+                        density="compact"
+                        label="Rechercher"
+                        prepend-inner-icon="mdi-magnify"
+                        variant="solo-filled"
+                        flat
+                        hide-details
+                        single-line
+                        class="mb-2"
+                      />
+
+                      <v-data-table
+                        v-model:search="invalidSearch"
+                        :items="files[item as keyof typeof files]!.invalidNights"
+                        density="compact"
+                      />
+                    </template>
+                    <template v-else>
+                      <div class="py-2"></div>
+
+                      <Bar
+                        id="compare-chart"
+                        :options="chartOptions"
+                        :data="chartData()"
+                      />
+
+                      <div class="py-2"></div>
+                    </template>
+                  </v-tabs-window-item>
+                </v-tabs-window>
+              </v-card-text>
             </template>
           </v-card>
         </v-col>
@@ -81,56 +178,101 @@
 </template>
 
 <script setup lang="ts">
-  import { read, utils } from 'xlsx'
-  import { parse } from "csv-parse/sync"
+  import { ref } from 'vue'
+  import { analyzeData } from '@/utils';
+  import { Bar } from 'vue-chartjs'
+  import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 
+  ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+
+  const tab = ref<string | null>(null)
+  const loading = ref<boolean>(false)
+
+  const invalidSearch = ref('')
+  const unknownSearch = ref('')
+  const duplicateSearch = ref('')
+
+  const teleservice = ref<Record<string, unknown>[] | null>(null);
   const files: {
-    teleservice?: unknown[],
-    airbnb?: unknown[],
-    booking?: unknown[],
-  } = {}
+    airbnb?: {
+      raw: Record<string, unknown>[];
+      unknownNights: Record<string, unknown>[];
+      duplicateNights: Record<string, unknown>[];
+      invalidNights: Record<string, unknown>[];
+    },
+    booking?: {
+      raw: Record<string, unknown>[];
+      unknownNights: Record<string, unknown>[];
+      duplicateNights: Record<string, unknown>[];
+      invalidNights: Record<string, unknown>[];
+    }
+  } = {};
 
-  const updateFile = (event: File, type: 'teleservice' | 'airbnb' | 'booking') => {
-    if (window.FileReader) {
-      const reader = new FileReader();
-      if (event.type === 'text/csv') {
-        reader.readAsText(event, 'UTF-8');
+  const platformColors = {
+    airbnb: '#FF5A5F',
+    booking: '#003580',
+  }
 
-        reader.onload = (e) => {
-          const records = parse(e.target!.result as Buffer, {
-            columns: true,
-            skip_empty_lines: true
-          });
+  const typeLabels = [{
+    label: 'Inconnu du téléservice',
+    value: 'unknownNights',
+  }, {
+    label: 'Doublon dans le fichier',
+    value: 'duplicateNights',
+  }, {
+    label: 'Format invalide',
+    value: 'invalidNights',
+  }]
 
-          files[type] = records
-          console.log(files)
-        };
-      } else if (event.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        reader.readAsArrayBuffer(event)
+  const chartOptions = ref({
+    responsive: true
+  })
 
-        reader.onload = (e) => {
-          const data = new Uint8Array(e.target!.result as ArrayBufferLike)
-          const workbook = read(data, { type: "array" })
-          const sheetNameList = workbook.SheetNames;
-
-          const records = utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
-          files[type] = records
-
-          console.log(files)
-        };
-      }
-
-      reader.onerror = (evt) => {
-        if (evt.target?.error?.name === "NotReadableError") {
-          alert("Cannot read file !");
-        }
-      };
-    } else {
-      alert('FileReader are not supported in this browser.');
+  const chartData = (): {
+    labels: string[],
+    datasets: { data: number[] }[],
+  } => {
+    if (!files) return {
+      labels: [],
+      datasets: [{ data: [] }],
     }
 
-    // const reader = new FileReader()
-    // reader.onload = e => console.log(e.target.result)
-    // reader.readAsText(event)
+    return {
+      labels: typeLabels.map(({ label }) => label),
+      datasets: (Object.keys(files) as (keyof typeof files)[]).map((platform) => ({
+        label: platform,
+        stack: true,
+        backgroundColor: platformColors[platform],
+        data: typeLabels
+          .map(({ value }) => files[platform]![value as ('unknownNights' | 'duplicateNights' | 'invalidNights')].length),
+      })),
+    }
+  }
+
+  const setFile = (platform: keyof typeof files, raw: Record<string, unknown>[]) => {
+    if (!teleservice.value) return
+
+    loading.value = true
+
+    switch (platform) {
+      case 'airbnb': {
+        files[platform] = {
+          raw,
+          ...analyzeData(teleservice.value!, raw, "Numéro de déclaration du meublé", "Code postal")
+        }
+        break;
+      }
+
+      case 'booking': {
+        files[platform] = {
+          raw,
+          ...analyzeData(teleservice.value!, raw, "id_num", "ad_cp")
+        }
+        break;
+      }
+    }
+
+    loading.value = false
+    tab.value = platform;
   }
 </script>
