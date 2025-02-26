@@ -41,12 +41,12 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         injectRegister: 'auto',
-        workbox: {
-          cleanupOutdatedCaches: true,
-          globPatterns: [
-            '**/*.{js,css,css2,html,ico,png,svg,json,vue,txt,woff,woff2,ttf,eot,woff2?v=7.4.47,woff?v=7.4.47,ttf?v=7.4.47}',
-          ],
-        },
+        // workbox: {
+        //   cleanupOutdatedCaches: true,
+        //   globPatterns: [
+        //     '**/*.{js,css,css2,html,ico,png,svg,json,vue,txt,woff,woff2,ttf,eot,woff2?v=7.4.47,woff?v=7.4.47,ttf?v=7.4.47}',
+        //   ],
+        // },
         manifest: {
           short_name: 'checkBnb',
           name: 'CheckBnb',
