@@ -44,7 +44,7 @@ export default defineConfig(() => {
         workbox: {
           cleanupOutdatedCaches: true,
           globPatterns: [
-            '**/*.{js,css,css2,html,ico,png,svg,json,vue,txt,woff*,woff2*,ttf*,eot}',
+            '**/*.{js,css,css2,html,ico,png,svg,json,vue,txt,woff,woff2,ttf,eot}',
           ],
         },
         manifest: {
