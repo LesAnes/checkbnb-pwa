@@ -43,8 +43,11 @@ export default defineConfig(() => {
         injectRegister: 'auto',
         workbox: {
           cleanupOutdatedCaches: true,
-          globPatterns: ["**/*"],
+          globPatterns: ['**/*.{js,css,css2,html,ico,png,svg,json,vue,txt,woff,woff2,ttf,eot}'],
         },
+        includeAssets: [
+          "**/*",
+        ],
         manifest: {
           short_name: 'checkBnb',
           name: 'CheckBnb',
