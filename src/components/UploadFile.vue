@@ -14,7 +14,7 @@
   import { read, utils } from 'xlsx'
   import { parse } from "csv-parse/sync"
 
-  const emit = defineEmits(['updateDoc']);
+  const emit = defineEmits(['startLoading', 'updateDoc']);
 
   const { title } = defineProps({
     title: {
@@ -23,41 +23,45 @@
     },
   })
 
-  const updateFile = (event: File) => {
-    if (window.FileReader) {
-      const reader = new FileReader();
-      if (event.type === 'text/csv') {
-        reader.readAsText(event, 'UTF-8');
+  const updateFile = (file: File) => {
+    emit('startLoading');
 
-        reader.onload = (e) => {
-          const records = parse(e.target!.result as Buffer, {
-            columns: true,
-            skip_empty_lines: true
-          });
-
-          emit('updateDoc', records)
-        };
-      } else if (event.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        reader.readAsArrayBuffer(event)
-
-        reader.onload = (e) => {
-          const data = new Uint8Array(e.target!.result as ArrayBufferLike)
-          const workbook = read(data, { type: "array" })
-          const sheetNameList = workbook.SheetNames;
-
-          const records = utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
-
-          emit('updateDoc', records)
-        };
+    const handleError = (evt: ProgressEvent<FileReader>) => {
+      if (evt.target?.error?.name === "NotReadableError") {
+        alert("Cannot read file !");
       }
+    };
 
-      reader.onerror = (evt) => {
-        if (evt.target?.error?.name === "NotReadableError") {
-          alert("Cannot read file !");
-        }
+    const reader = new FileReader();
+    let records: Record<string, unknown>[] = [];
+    if (file.type === 'text/csv') {
+      reader.onload = (e) => {
+        records = parse(e.target!.result as string, {
+          columns: true,
+          skipEmptyLines: true
+        });
+        emit('updateDoc', records)
       };
-    } else {
-      alert('FileReader are not supported in this browser.');
+
+      reader.readAsText(file, 'UTF-8');
+
+      reader.onerror = handleError;
+    } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target!.result as ArrayBuffer)
+
+        const workbook = read(data, {
+          type: "array",
+        })
+        const sheetNameList = workbook.SheetNames;
+
+        records = utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
+        emit('updateDoc', records)
+      };
+
+      reader.readAsArrayBuffer(file);
+
+      reader.onerror = handleError;
     }
   }
 </script>

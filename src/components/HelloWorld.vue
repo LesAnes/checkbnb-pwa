@@ -20,7 +20,8 @@
 
           <UploadFile
             title="Fichier Téléservice"
-            @update-doc="teleservice = $event"
+            @start-loading="loading = true"
+            @update-doc="teleservice = $event; loading = false;"
           />
         </v-col>
         <div class="py-2"></div>
@@ -32,6 +33,7 @@
         <v-col cols="6">
           <UploadFile
             title="Fichier Airbnb"
+            @start-loading="loading = true"
             @update-doc="setFile('airbnb', $event)"
           />
         </v-col>
@@ -39,13 +41,13 @@
         <v-col cols="6">
           <UploadFile
             title="Fichier Booking"
+            @start-loading="loading = true"
             @update-doc="setFile('booking', $event)"
           />
         </v-col>
       </v-row>
 
       <v-progress-circular
-        v-if="loading"
         class="ma-4 position-fixed top-0 right-0"
         :size="80"
         color="amber"
@@ -249,9 +251,8 @@
   }
 
   const setFile = (platform: keyof typeof files, raw: Record<string, unknown>[]) => {
+    console.log(raw)
     if (!teleservice.value) return
-
-    loading.value = true
 
     switch (platform) {
       case 'airbnb': {

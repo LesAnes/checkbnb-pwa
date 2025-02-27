@@ -20,31 +20,39 @@ export const analyzeData = (
   idCol: string,
   postalCodeCol: string
 ): { unknownNights: Record<string, unknown>[], duplicateNights: Record<string, unknown>[], invalidNights: Record<string, unknown>[] } => {
-  if (!source) {
+  if (!source || !dataset) {
     return {
       unknownNights: [],
       duplicateNights: [],
       invalidNights: [],
-    }
+    };
   }
 
-  // Fusion des données avec la source (ex: teleservice)
-  const merged = dataset.map((item) => ({
-    ...item,
-    matched: source.some((t) => t.numero_declaration!.toString() === item[idCol]!.toString()),
-    isValid: isIdNumberValid(item[idCol]!.toString(), item[postalCodeCol]!.toString()),
-  }));
+  const sourceIds = new Set(source.map((t) => t.numero_declaration?.toString()));
+  const seenIds = new Set<string>();
+  const duplicateNights: Record<string, unknown>[] = [];
+  const unknownNights: Record<string, unknown>[] = [];
+  const invalidNights: Record<string, unknown>[] = [];
 
-  // Nuitées inconnues (ID non trouvé dans la source)
-  const unknownNights = merged.filter((item) => !item.matched);
+  for (const item of dataset) {
+    const id = item[idCol]?.toString();
+    const postalCode = item[postalCodeCol]?.toString();
 
-  // Nuitées en double
-  const duplicateNights = dataset.filter(
-    (item, index, arr) => arr.findIndex((i) => i[idCol]!.toString() === item[idCol]!.toString()) !== index
-  );
+    if (!id) continue; // Ignore les entrées sans ID valide
 
-  // Nuitées invalides (ID mal formé ou code postal incorrect)
-  const invalidNights = merged.filter((item) => !item.isValid);
+    // Détection des doublons en une seule passe
+    if (seenIds.has(id)) {
+      duplicateNights.push(item);
+    } else {
+      seenIds.add(id);
+    }
+
+    const matched = sourceIds.has(id);
+    const isValid = postalCode ? isIdNumberValid(id, postalCode) : true;
+
+    if (!matched) unknownNights.push(item);
+    if (!isValid) invalidNights.push(item);
+  }
 
   return {
     unknownNights,
