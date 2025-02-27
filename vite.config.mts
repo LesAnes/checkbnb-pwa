@@ -45,6 +45,16 @@ export default defineConfig(() => {
           cleanupOutdatedCaches: true,
           globPatterns: ['**/*.{js,css,css2,html,ico,png,svg,json,vue,txt,woff,woff2,ttf,eot}'],
           runtimeCaching: [{
+            urlPattern: /\/assets\/materialdesignicons-webfont-.*\.(eot|woff2?|ttf)(\?.*)?$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mdi-fonts',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 an
+              }
+            }
+          }, {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
