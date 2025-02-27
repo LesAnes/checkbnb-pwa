@@ -48,6 +48,7 @@
       </v-row>
 
       <v-progress-circular
+        v-if="loading"
         class="ma-4 position-fixed top-0 right-0"
         :size="80"
         color="amber"
@@ -68,13 +69,13 @@
               </h2>
             </template>
 
-            <template #subtitle>
+            <template #text>
               <v-tabs
                 v-model="tab"
                 color="amber-lighten-1"
               >
                 <v-tab
-                  v-for="item in (Object.keys(files).length > 1 ? Object.keys(files).concat('comparatif'): Object.keys(files))"
+                  v-for="item in (Object.keys(files).length > 1 ? Object.keys(files).concat('comparatif') : Object.keys(files))"
                   :key="item"
                   :value="item"
                 >
@@ -85,8 +86,9 @@
               <v-card-text>
                 <v-tabs-window v-model="tab">
                   <v-tabs-window-item
-                    v-for="item in (Object.keys(files).length > 1 ? Object.keys(files).concat('comparatif'): Object.keys(files))"
+                    v-for="item in (Object.keys(files).length > 1 ? Object.keys(files).concat('comparatif') : Object.keys(files))"
                     :key="item"
+                    :transition="false"
                     :value="item"
                   >
                     <template v-if="item !== 'comparatif'">
@@ -180,9 +182,9 @@
 
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { analyzeData } from '@/utils';
   import { Bar } from 'vue-chartjs'
   import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
+  import AnalyzeWorker from "@/workers/analyzeWorker.ts?worker";
 
   ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
@@ -253,25 +255,52 @@
   const setFile = (platform: keyof typeof files, raw: Record<string, unknown>[]) => {
     if (!teleservice.value) return
 
+    loading.value = true;
+
+    const worker = new AnalyzeWorker();
+
+    worker.onmessage = (event) => {
+      files[platform] = {
+        raw,
+        ...event.data,
+      };
+
+      loading.value = false;
+      tab.value = platform;
+      worker.terminate();
+    };
+
+    worker.onerror = (error) => {
+      console.error("Erreur Web Worker :", error);
+      loading.value = false;
+      worker.terminate();
+    };
+
+    let idCol = ''
+    let postalCodeCol = ''
+
     switch (platform) {
       case 'airbnb': {
-        files[platform] = {
-          raw,
-          ...analyzeData(teleservice.value!, raw, "Numéro de déclaration du meublé", "Code postal")
-        }
+        idCol = "Numéro de déclaration du meublé";
+        postalCodeCol = "Code postal";
         break;
       }
 
       case 'booking': {
-        files[platform] = {
-          raw,
-          ...analyzeData(teleservice.value!, raw, "id_num", "ad_cp")
-        }
+        idCol = "id_num";
+        postalCodeCol = "ad_cp";
         break;
       }
     }
 
-    loading.value = false
-    tab.value = platform;
+    const source = JSON.parse(JSON.stringify(teleservice.value));
+    const dataset = JSON.parse(JSON.stringify(raw));
+
+    worker.postMessage({
+      source,
+      dataset,
+      idCol,
+      postalCodeCol,
+    });
   }
 </script>

@@ -1,3 +1,5 @@
+/// <reference lib="webworker" />
+
 const isIdNumberValid = (id: string, postalCode: string): boolean => {
   if (!/^75\d{11}$/.test(id)) return false;
 
@@ -14,21 +16,10 @@ const isIdNumberValid = (id: string, postalCode: string): boolean => {
   return arrondissementFromId === arrondissementFromPostal;
 };
 
-export const analyzeData = (
-  source: Record<string, unknown>[],
-  dataset: Record<string, unknown>[],
-  idCol: string,
-  postalCodeCol: string
-): { unknownNights: Record<string, unknown>[], duplicateNights: Record<string, unknown>[], invalidNights: Record<string, unknown>[] } => {
-  if (!source || !dataset) {
-    return {
-      unknownNights: [],
-      duplicateNights: [],
-      invalidNights: [],
-    };
-  }
+self.onmessage = (event) => {
+  const { source, dataset, idCol, postalCodeCol } = event.data;
 
-  const sourceIds = new Set(source.map((t) => t.numero_declaration?.toString()));
+  const sourceIds = new Set(source.map((t: Record<string, unknown>) => t.numero_declaration?.toString()));
   const seenIds = new Set<string>();
   const duplicateNights: Record<string, unknown>[] = [];
   const unknownNights: Record<string, unknown>[] = [];
@@ -38,9 +29,8 @@ export const analyzeData = (
     const id = item[idCol]?.toString();
     const postalCode = item[postalCodeCol]?.toString();
 
-    if (!id) continue; // Ignore les entrées sans ID valide
+    if (!id) continue;
 
-    // Détection des doublons en une seule passe
     if (seenIds.has(id)) {
       duplicateNights.push(item);
     } else {
@@ -54,9 +44,5 @@ export const analyzeData = (
     if (!isValid) invalidNights.push(item);
   }
 
-  return {
-    unknownNights,
-    duplicateNights,
-    invalidNights,
-  };
+  self.postMessage({ unknownNights, duplicateNights, invalidNights });
 };
