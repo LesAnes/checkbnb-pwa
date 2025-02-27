@@ -251,7 +251,6 @@
   }
 
   const setFile = (platform: keyof typeof files, raw: Record<string, unknown>[]) => {
-    console.log(raw)
     if (!teleservice.value) return
 
     switch (platform) {
