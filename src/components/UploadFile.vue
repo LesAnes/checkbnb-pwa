@@ -23,17 +23,26 @@
     },
   })
 
+  /**
+   * Lecture et conversion d’un fichier (CSV ou Excel)
+   * puis envoi des données au composant parent
+   */
   const updateFile = (file: File) => {
     emit('startLoading');
 
+    /**
+     * Gestion d'erreur de lecture de fichier
+     */
     const handleError = (evt: ProgressEvent<FileReader>) => {
       if (evt.target?.error?.name === "NotReadableError") {
-        alert("Cannot read file !");
+        alert("Impossible de lire le fichier !");
       }
     };
 
     const reader = new FileReader();
     let records: Record<string, unknown>[] = [];
+
+    // Fichier CSV
     if (file.type === 'text/csv') {
       reader.onload = (e) => {
         records = parse(e.target!.result as string, {
@@ -42,25 +51,19 @@
         });
         emit('updateDoc', records)
       };
-
       reader.readAsText(file, 'UTF-8');
-
       reader.onerror = handleError;
+
+    // Fichier Excel (.xlsx)
     } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       reader.onload = (e) => {
         const data = new Uint8Array(e.target!.result as ArrayBuffer)
-
-        const workbook = read(data, {
-          type: "array",
-        })
+        const workbook = read(data, { type: "array" })
         const sheetNameList = workbook.SheetNames;
-
         records = utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
         emit('updateDoc', records)
       };
-
       reader.readAsArrayBuffer(file);
-
       reader.onerror = handleError;
     }
   }

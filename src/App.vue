@@ -8,5 +8,5 @@
 </template>
 
 <script lang="ts" setup>
-  const version = ref('v1.0.4')
+  const version = ref('v1.0.5')
 </script>
