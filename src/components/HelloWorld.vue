@@ -10,12 +10,15 @@
       </v-row>
       <v-row>
         <v-col cols="12">
-          <h2 class="text-h5 font-weight-bold">Téléverser les fichiers</h2>
+          <h2 class="text-h5 font-weight-bold">
+            Téléverser les fichiers
+          </h2>
 
           <div class="py-2" />
 
           <UploadFile
             title="Fichier Téléservice"
+            :disabled="teleservice !== null"
             @start-loading="loading = true"
             @update-doc="
               teleservice = $event;
@@ -24,14 +27,49 @@
           />
         </v-col>
         <div class="py-2" />
-
-        <v-divider />
       </v-row>
+
+      <v-row>
+        <v-col cols="6">
+          <UploadFile
+            title="Fichier Numéro des inactifs du Téléservice"
+            :disabled="teleserviceInactive !== null || Object.keys(files).length > 0"
+            @start-loading="loading = true"
+            @update-doc="
+              teleserviceInactive = $event;
+              loading = false;
+            "
+          />
+        </v-col>
+
+        <v-col
+          cols="6"
+        >
+          <v-alert
+            type="info"
+            variant="outlined"
+          >
+            <template #title>
+              <div class="text-body-1">
+                <ul>
+                  <li>-> Fichier complètement optionnel.</li>
+                  <li>-> Liste les numéros d'enregistrements qui ont été désactivés.</li>
+                </ul>
+              </div>
+            </template>
+          </v-alert>
+        </v-col>
+      </v-row>
+
+      <div class="py-2" />
+      <v-divider />
+      <div class="py-2" />
 
       <v-row v-if="teleservice">
         <v-col cols="6">
           <UploadFile
             title="Fichier Airbnb"
+            :disabled="files?.airbnb && Object.keys(files?.airbnb!).length > 0"
             @start-loading="loading = true"
             @update-doc="setFile('airbnb', $event)"
           />
@@ -40,6 +78,7 @@
         <v-col cols="6">
           <UploadFile
             title="Fichier Booking"
+            :disabled="files?.booking && Object.keys(files?.booking!).length > 0"
             @start-loading="loading = true"
             @update-doc="setFile('booking', $event)"
           />
@@ -63,14 +102,19 @@
             variant="outlined"
           >
             <template #title>
-              <h2 class="text-h5 text-center font-weight-bold">Résultat</h2>
+              <h2 class="text-h5 text-center font-weight-bold">
+                Résultat
+              </h2>
             </template>
 
             <template #text>
-              <v-tabs v-model="tab" color="amber-lighten-1">
+              <v-tabs
+                v-model="tab"
+                color="amber-lighten-1"
+              >
                 <v-tab
                   v-for="item in Object.keys(files).length > 1
-                    ? Object.keys(files).concat('comparatif')
+                    ? Object.keys(files).concat('crossplatform', 'comparatif')
                     : Object.keys(files)"
                   :key="item"
                   :value="item"
@@ -83,16 +127,16 @@
                 <v-tabs-window v-model="tab">
                   <v-tabs-window-item
                     v-for="item in Object.keys(files).length > 1
-                      ? Object.keys(files).concat('comparatif')
+                      ? Object.keys(files).concat('crossplatform','comparatif')
                       : Object.keys(files)"
                     :key="item"
                     :transition="false"
                     :value="item"
                   >
-                    <template v-if="item !== 'comparatif'">
+                    <template v-if="Object.keys(files).includes(item)">
                       <div class="py-2" />
 
-                      <h2 class="text-h4">
+                      <h2 class="text-h5">
                         Nuitées <b class="text-capitalize">{{ item }}</b> ne
                         correspondant à aucun numéro d'enregistrement du
                         <b>Téléservice</b>
@@ -103,7 +147,9 @@
                         et tentons de trouver une correspondance dans le
                         téléservice via le numéro d'enregistrement. Si aucune
                         correspondance n'est trouvée, la ligne est affichée
-                        ci-dessous.
+                        ci-dessous. La colonne
+                        <b>« IS INACTIVE »</b> représente le fait que
+                        le numéro d'enregistrement a été trouvé dans le fichier des numéros inactifs.
                       </div>
 
                       <div class="d-flex align-center mb-4">
@@ -180,7 +226,7 @@
 
                       <div class="py-2" />
 
-                      <h2 class="text-h4">
+                      <h2 class="text-h5">
                         Nuitées <b class="text-capitalize">{{ item }}</b> en
                         doublon
                       </h2>
@@ -190,7 +236,9 @@
                         et recherchons les numéros d'enregistrement apparaissant
                         plusieurs fois dans ce même fichier. Si un numéro
                         d'enregistrement apparaît plusieurs fois, toutes les
-                        occurrences sont affichées ci-dessous.
+                        occurrences sont affichées ci-dessous. La colonne <b>« COUNT »</b>
+                        représente le nombre de fois que ce numéro est apparu. La colonne
+                        <b>« DIFFERENT ADDRESSES »</b> représente le nombre de fois que ce numéro est apparu avec une adresse différente.
                       </div>
 
                       <div class="d-flex align-center mb-4">
@@ -268,7 +316,7 @@
 
                       <div class="py-2" />
 
-                      <h2 class="text-h4">
+                      <h2 class="text-h5">
                         Nuitées <b class="text-capitalize">{{ item }}</b> au
                         format invalide
                       </h2>
@@ -358,7 +406,84 @@
                         fixed-header
                       />
                     </template>
-                    <template v-else>
+
+                    <template v-else-if="item === 'crossplatform'">
+                      <div class="py-2" />
+
+                      <v-text-field
+                        v-model="crossplatformSearch"
+                        density="compact"
+                        label="Rechercher"
+                        prepend-inner-icon="mdi-magnify"
+                        variant="solo-filled"
+                        flat
+                        hide-details
+                        single-line
+                      />
+
+                      <div class="text-subtitle-1 my-4">
+                        Les tableaux ci-dessous (un par plateforme) présentent directement les données issues des documents fournis en entrée.
+                        La barre de recherche permet de filtrer simultanément les deux tableaux selon les colonnes choisies.
+                      </div>
+
+                      <template
+                        v-for="platform in Object.keys(files)"
+                        :key="platform"
+                      >
+                        <h2 class="text-h5 font-weight-bold text-capitalize my-4">
+                          {{ platform }}
+                        </h2>
+
+                        <div class="mb-4">
+                          <v-expansion-panels>
+                            <v-expansion-panel>
+                              <v-expansion-panel-title>
+                                Recherche avancée
+                              </v-expansion-panel-title>
+                              <v-expansion-panel-text>
+                                <div class="text-body-1 mb-4">
+                                  La barre de recherche ci-dessus va filtrer des
+                                  résultats basés uniquement sur les colonnes
+                                  cochées ci-dessous
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                  <!-- Cocher tout -->
+                                  <v-checkbox
+                                    v-model="columnsFilters[platform as keyof typeof columnsFilters]!.rawCheckAll"
+                                    label="Cocher tout"
+                                    density="compact"
+                                    hide-details
+                                    :indeterminate="columnsFilters[platform as keyof typeof columnsFilters]!.rawIndeterminate"
+                                  />
+                                  <v-divider class="my-1" />
+
+                                  <v-checkbox
+                                    v-for="header in Object.keys(columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters)"
+                                    :key="header"
+                                    v-model="columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters[header]"
+                                    :label="header"
+                                    density="compact"
+                                    hide-details
+                                  />
+                                </div>
+                              </v-expansion-panel-text>
+                            </v-expansion-panel>
+                          </v-expansion-panels>
+                        </div>
+
+                        <v-data-table
+                          v-model:search="crossplatformSearch"
+                          :filter-keys="Object.keys(columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters)
+                            .filter((key) => columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters[key])"
+                          :items="files[platform as keyof typeof files]!.raw"
+                          height="800"
+                          fixed-header
+                        />
+
+                        <div class="py-2" />
+                      </template>
+                    </template>
+                    <template v-else-if="item === 'comparatif'">
                       <div class="py-2" />
 
                       <Bar
@@ -403,14 +528,42 @@ ChartJS.register(
   LinearScale
 );
 
+type Platform = "airbnb" | "booking";
+type FilterKey =
+  | "unknownNightsActiveColumnsFilters"
+  | "duplicateNightsActiveColumnsFilters"
+  | "invalidNightsActiveColumnsFilters"
+  | "rawNightsActiveColumnsFilters";
+
+type FiltersMaps = Record<string, boolean>;
+
+type FiltersGroup = {
+  unknownNightsActiveColumnsFilters: FiltersMaps;
+  duplicateNightsActiveColumnsFilters: FiltersMaps;
+  invalidNightsActiveColumnsFilters: FiltersMaps;
+  rawNightsActiveColumnsFilters: FiltersMaps;
+
+  unknownCheckAll: WritableComputedRef<boolean>;
+  duplicateCheckAll: WritableComputedRef<boolean>;
+  invalidCheckAll: WritableComputedRef<boolean>;
+  rawCheckAll: WritableComputedRef<boolean>;
+
+  unknownIndeterminate: ComputedRef<boolean>;
+  duplicateIndeterminate: ComputedRef<boolean>;
+  invalidIndeterminate: ComputedRef<boolean>;
+  rawIndeterminate: ComputedRef<boolean>;
+};
+
 const tab = ref<string | null>(null);
 const loading = ref<boolean>(false);
 
 const invalidSearch = ref("");
 const unknownSearch = ref("");
 const duplicateSearch = ref("");
+const crossplatformSearch = ref("");
 
 const teleservice = ref<Record<string, unknown>[] | null>(null);
+const teleserviceInactive = ref<Record<string, unknown>[] | null>(null);
 const files: {
   airbnb?: {
     raw: Record<string, unknown>[];
@@ -425,28 +578,6 @@ const files: {
     invalidNights: Record<string, unknown>[];
   };
 } = {};
-
-type Platform = "airbnb" | "booking";
-type FilterKey =
-  | "unknownNightsActiveColumnsFilters"
-  | "duplicateNightsActiveColumnsFilters"
-  | "invalidNightsActiveColumnsFilters";
-
-type FiltersMaps = Record<string, boolean>;
-
-type FiltersGroup = {
-  unknownNightsActiveColumnsFilters: FiltersMaps;
-  duplicateNightsActiveColumnsFilters: FiltersMaps;
-  invalidNightsActiveColumnsFilters: FiltersMaps;
-
-  unknownCheckAll: WritableComputedRef<boolean>;
-  duplicateCheckAll: WritableComputedRef<boolean>;
-  invalidCheckAll: WritableComputedRef<boolean>;
-
-  unknownIndeterminate: ComputedRef<boolean>;
-  duplicateIndeterminate: ComputedRef<boolean>;
-  invalidIndeterminate: ComputedRef<boolean>;
-};
 
 const columnsFilters = reactive<Partial<Record<Platform, FiltersGroup>>>({});
 
@@ -572,6 +703,11 @@ const setFile = (
       "invalidNightsActiveColumnsFilters"
     );
 
+    const { checkAll: rawCheckAll, indeterminate: rawIndeterminate } = createCheckAll(
+      platform,
+      "rawNightsActiveColumnsFilters"
+    );
+
     columnsFilters[platform] = {
       // checkboxes : toutes cochées par défaut
       unknownNightsActiveColumnsFilters: Object.fromEntries(
@@ -586,6 +722,9 @@ const setFile = (
       invalidNightsActiveColumnsFilters: Object.fromEntries(
         Object.keys(event.data.invalidNights[0] || {}).map((key) => [key, true])
       ),
+      rawNightsActiveColumnsFilters: Object.fromEntries(
+        Object.keys(event.data.raw[0] || {}).map((key) => [key, true])
+      ),
 
       unknownCheckAll: unknownCheckAll as unknown as boolean,
       unknownIndeterminate: unknownIndeterminate as unknown as boolean,
@@ -595,6 +734,9 @@ const setFile = (
 
       invalidCheckAll: invalidCheckAll as unknown as boolean,
       invalidIndeterminate: invalidIndeterminate as unknown as boolean,
+
+      rawCheckAll: rawCheckAll as unknown as boolean,
+      rawIndeterminate: rawIndeterminate as unknown as boolean,
     };
 
     loading.value = false;
@@ -610,30 +752,40 @@ const setFile = (
 
   let idCol = "";
   let postalCodeCol = "";
+  let streetNumberCol = "";
+  let streetNameCol = "";
 
   switch (platform) {
     case "airbnb": {
       idCol = "Numéro de déclaration du meublé";
       postalCodeCol = "Code postal";
+      streetNumberCol = "Numéro de voie";
+      streetNameCol = "Type et nom de la voie";
       break;
     }
     case "booking": {
       idCol = "id_num";
       postalCodeCol = "ad_cp";
+      streetNumberCol = "ad_num_voie";
+      streetNameCol = "ad_voie";
       break;
     }
   }
 
   const source = JSON.parse(JSON.stringify(teleservice.value));
+  const inactiveSource = JSON.parse(JSON.stringify(teleserviceInactive.value));
   const dataset = JSON.parse(JSON.stringify(raw)).map(
     (elem: object, index: number) => ({ ID: index, ...elem })
   );
 
   worker.postMessage({
     source,
+    inactiveSource,
     dataset,
     idCol,
     postalCodeCol,
+    streetNumberCol,
+    streetNameCol,
   });
 };
 

@@ -36,18 +36,23 @@ const isIdNumberValid = (id: string, postalCode: string | null = null): [boolean
  * - Détecte les IDs invalides par rapport au code postal
  */
 self.onmessage = (event) => {
-  const { source, dataset, idCol, postalCodeCol } = event.data;
+  const { source, inactiveSource, dataset, idCol, postalCodeCol, streetNumberCol, streetNameCol } = event.data;
 
   // Ensemble des IDs valides connus dans le téléservice
   const sourceIds = new Set(source.map((t: Record<string, unknown>) => t.numero_declaration?.toString()));
 
   // Suivi des occurrences d’IDs pour détecter les doublons
   const idCounts = new Map<string, number>();
+  const firstOccurrence = new Map<string, Record<string, unknown>>();
 
   // Résultats de l’analyse
-  const duplicateNights: Record<string, unknown>[] = [];
-  const unknownNights: Record<string, unknown>[] = [];
+  let duplicateNights: Record<string, unknown>[] = [];
+  let unknownNights: Record<string, unknown>[] = [];
   const invalidNights: Record<string, unknown>[] = [];
+
+  const inactiveSourceIds: Set<string> = inactiveSource ?
+    new Set(inactiveSource.map((inactive: { 'Numéro Meuble': string }) => inactive['Numéro Meuble'].toString())) :
+    new Set([])
 
   for (const item of dataset) {
     const id = item[idCol]?.toString();
@@ -60,6 +65,11 @@ self.onmessage = (event) => {
     idCounts.set(id, count);
     if (count > 1) {
       duplicateNights.push(item);
+      if (count === 2) {
+        duplicateNights.push(firstOccurrence.get(id)!)
+      }
+    } else {
+      firstOccurrence.set(id, item);
     }
 
     // Vérification de la présence dans le téléservice
@@ -74,6 +84,41 @@ self.onmessage = (event) => {
       ...item,
     });
   }
+
+  const addressesById = duplicateNights.reduce<Record<string, Set<string>>>((acc, item) => {
+    const id = item[idCol]?.toString();
+    const postalCode = item[postalCodeCol]?.toString();
+    const streetNumber = item[streetNumberCol]?.toString();
+    const streetName = item[streetNameCol]?.toString();
+
+    const address = `${streetNumber}${streetName}${postalCode}`.toLowerCase();
+
+    if (!acc[id!]) {
+      acc[id!] = new Set();
+    }
+    acc[id!].add(address);
+
+    return acc;
+  }, {});
+
+  duplicateNights = duplicateNights.map((night) => {
+    const id: string = night[idCol]?.toString() as string;
+
+    return {
+      'COUNT': idCounts.get(id),
+      'DIFFERENT ADDRESSES': addressesById[id!].size,
+      ...night,
+    }
+  })
+
+  unknownNights = unknownNights.map((night) => {
+    const id: string = night[idCol]?.toString() as string;
+
+    return {
+      'IS INACTIVE': inactiveSourceIds.has(id) ? 'Oui' : 'Non',
+      ...night,
+    }
+  })
 
   // On renvoie les résultats au thread principal
   self.postMessage({ unknownNights, duplicateNights, invalidNights, raw: dataset });

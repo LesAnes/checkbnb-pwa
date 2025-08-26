@@ -5,6 +5,7 @@
     divider-text="ou"
     icon="mdi-upload"
     :title="title"
+    :disabled="disabled"
     accept="text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     @update:model-value="updateFile($event as unknown as File)"
   />
@@ -20,6 +21,10 @@
     title: {
       type: String,
       required: true,
+    },
+    disabled: {
+      type: Boolean,
+      default: false,
     },
   })
 
