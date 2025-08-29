@@ -17,13 +17,13 @@ const isIdNumberValid = (id: string, postalCode: string | null = null): [boolean
   const arrondissementFromId = id.substring(3, 5);
 
   // Le code postal doit être de la forme 750xx
-  if (!/^750\d{2}$/.test(postalCode)) return [false, 'code postal'];
+  if (!/^75\d{3}$/.test(postalCode)) return [false, 'code postal'];
 
   // Extraire l'arrondissement depuis le code postal
   const arrondissementFromPostal = postalCode.substring(3, 5);
 
   // Les arrondissements doivent correspondre
-  const postalCodeError = arrondissementFromId === arrondissementFromPostal;
+  const postalCodeError = arrondissementFromId !== arrondissementFromPostal;
   return postalCodeError ? [false, 'code postal'] : [true, null]
 };
 

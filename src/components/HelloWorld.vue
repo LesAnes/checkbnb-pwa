@@ -22,6 +22,7 @@
             @start-loading="loading = true"
             @update-doc="
               teleservice = $event;
+              setTeleserviceColumnsFilters();
               loading = false;
             "
           />
@@ -179,40 +180,21 @@
                       </div>
 
                       <div class="mb-4">
-                        <v-expansion-panels>
-                          <v-expansion-panel>
-                            <v-expansion-panel-title>
-                              Recherche avancée
-                            </v-expansion-panel-title>
-                            <v-expansion-panel-text>
-                              <div class="text-body-1 mb-4">
-                                La barre de recherche ci-dessus va filtrer des
-                                résultats basés uniquement sur les colonnes
-                                cochées ci-dessous
-                              </div>
-                              <div class="flex flex-col gap-1">
-                                <!-- Cocher tout -->
-                                <v-checkbox
-                                  v-model="columnsFilters[item as keyof typeof columnsFilters]!.unknownCheckAll"
-                                  label="Cocher tout"
-                                  density="compact"
-                                  hide-details
-                                  :indeterminate="columnsFilters[item as keyof typeof columnsFilters]!.unknownIndeterminate"
-                                />
-                                <v-divider class="my-1" />
-
-                                <v-checkbox
-                                  v-for="header in Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters)"
-                                  :key="header"
-                                  v-model="columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters[header]"
-                                  :label="header"
-                                  density="compact"
-                                  hide-details
-                                />
-                              </div>
-                            </v-expansion-panel-text>
-                          </v-expansion-panel>
-                        </v-expansion-panels>
+                        <AdvancedSearch
+                          :check-all="columnsFilters[item as keyof typeof columnsFilters]!.unknownCheckAll"
+                          :indeterminate="columnsFilters[item as keyof typeof columnsFilters]!.unknownIndeterminate"
+                          :headers="Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters)"
+                          :filters="columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters"
+                          @set-check-all="(e) => {
+                            columnsFilters[item as keyof typeof columnsFilters]!.unknownCheckAll = e
+                          }"
+                          @set-check="(e) => {
+                            columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters = {
+                              ...columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters,
+                              ...e,
+                            }
+                          }"
+                        />
                       </div>
 
                       <v-data-table
@@ -269,40 +251,21 @@
                       </div>
 
                       <div class="mb-4">
-                        <v-expansion-panels>
-                          <v-expansion-panel>
-                            <v-expansion-panel-title>
-                              Recherche avancée
-                            </v-expansion-panel-title>
-                            <v-expansion-panel-text>
-                              <div class="text-body-1 mb-4">
-                                La barre de recherche ci-dessus va filtrer des
-                                résultats basés uniquement sur les colonnes
-                                cochées ci-dessous
-                              </div>
-                              <div class="flex flex-col gap-1">
-                                <!-- Cocher tout -->
-                                <v-checkbox
-                                  v-model="columnsFilters[item as keyof typeof columnsFilters]!.duplicateCheckAll"
-                                  label="Cocher tout"
-                                  density="compact"
-                                  hide-details
-                                  :indeterminate="columnsFilters[item as keyof typeof columnsFilters]!.duplicateIndeterminate"
-                                />
-                                <v-divider class="my-1" />
-
-                                <v-checkbox
-                                  v-for="header in Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters)"
-                                  :key="header"
-                                  v-model="columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters[header]"
-                                  :label="header"
-                                  density="compact"
-                                  hide-details
-                                />
-                              </div>
-                            </v-expansion-panel-text>
-                          </v-expansion-panel>
-                        </v-expansion-panels>
+                        <AdvancedSearch
+                          :check-all="columnsFilters[item as keyof typeof columnsFilters]!.duplicateCheckAll"
+                          :indeterminate="columnsFilters[item as keyof typeof columnsFilters]!.duplicateIndeterminate"
+                          :headers="Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters)"
+                          :filters="columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters"
+                          @set-check-all="(e) => {
+                            columnsFilters[item as keyof typeof columnsFilters]!.duplicateCheckAll = e
+                          }"
+                          @set-check="(e) => {
+                            columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters = {
+                              ...columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters,
+                              ...e,
+                            }
+                          }"
+                        />
                       </div>
 
                       <v-data-table
@@ -361,40 +324,21 @@
                       </div>
 
                       <div class="mb-4">
-                        <v-expansion-panels>
-                          <v-expansion-panel>
-                            <v-expansion-panel-title>
-                              Recherche avancée
-                            </v-expansion-panel-title>
-                            <v-expansion-panel-text>
-                              <div class="text-body-1 mb-4">
-                                La barre de recherche ci-dessus va filtrer des
-                                résultats basés uniquement sur les colonnes
-                                cochées ci-dessous
-                              </div>
-                              <div class="flex flex-col gap-1">
-                                <!-- Cocher tout -->
-                                <v-checkbox
-                                  v-model="columnsFilters[item as keyof typeof columnsFilters]!.invalidCheckAll"
-                                  label="Cocher tout"
-                                  density="compact"
-                                  hide-details
-                                  :indeterminate="columnsFilters[item as keyof typeof columnsFilters]!.invalidIndeterminate"
-                                />
-                                <v-divider class="my-1" />
-
-                                <v-checkbox
-                                  v-for="header in Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters)"
-                                  :key="header"
-                                  v-model="columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters[header]"
-                                  :label="header"
-                                  density="compact"
-                                  hide-details
-                                />
-                              </div>
-                            </v-expansion-panel-text>
-                          </v-expansion-panel>
-                        </v-expansion-panels>
+                        <AdvancedSearch
+                          :check-all="columnsFilters[item as keyof typeof columnsFilters]!.invalidCheckAll"
+                          :indeterminate="columnsFilters[item as keyof typeof columnsFilters]!.invalidIndeterminate"
+                          :headers="Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters)"
+                          :filters="columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters"
+                          @set-check-all="(e) => {
+                            columnsFilters[item as keyof typeof columnsFilters]!.invalidCheckAll = e
+                          }"
+                          @set-check="(e) => {
+                            columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters = {
+                              ...columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters,
+                              ...e,
+                            }
+                          }"
+                        />
                       </div>
 
                       <v-data-table
@@ -426,6 +370,37 @@
                         La barre de recherche permet de filtrer simultanément les deux tableaux selon les colonnes choisies.
                       </div>
 
+                      <h2 class="text-h5 font-weight-bold text-capitalize my-4">
+                        Téléservice
+                      </h2>
+
+                      <div class="mb-4">
+                        <AdvancedSearch
+                          :check-all="teleserviceColumnsFilters['teleservice']!.rawCheckAll"
+                          :indeterminate="teleserviceColumnsFilters['teleservice']!.rawIndeterminate"
+                          :headers="Object.keys(teleserviceColumnsFilters['teleservice']!.rawNightsActiveColumnsFilters)"
+                          :filters="teleserviceColumnsFilters['teleservice']!.rawNightsActiveColumnsFilters"
+                          @set-check-all="(e) => {
+                            teleserviceColumnsFilters['teleservice']!.rawCheckAll = e
+                          }"
+                          @set-check="(e) => {
+                            teleserviceColumnsFilters['teleservice']!.rawNightsActiveColumnsFilters = {
+                              ...teleserviceColumnsFilters['teleservice']!.rawNightsActiveColumnsFilters,
+                              ...e,
+                            }
+                          }"
+                        />
+                      </div>
+
+                      <v-data-table
+                        v-model:search="crossplatformSearch"
+                        :filter-keys="Object.keys(teleserviceColumnsFilters['teleservice' as keyof typeof teleserviceColumnsFilters]!.rawNightsActiveColumnsFilters)
+                          .filter((key) => teleserviceColumnsFilters['teleservice' as keyof typeof teleserviceColumnsFilters]!.rawNightsActiveColumnsFilters[key])"
+                        :items="teleservice!"
+                        height="800"
+                        fixed-header
+                      />
+
                       <template
                         v-for="platform in Object.keys(files)"
                         :key="platform"
@@ -435,40 +410,21 @@
                         </h2>
 
                         <div class="mb-4">
-                          <v-expansion-panels>
-                            <v-expansion-panel>
-                              <v-expansion-panel-title>
-                                Recherche avancée
-                              </v-expansion-panel-title>
-                              <v-expansion-panel-text>
-                                <div class="text-body-1 mb-4">
-                                  La barre de recherche ci-dessus va filtrer des
-                                  résultats basés uniquement sur les colonnes
-                                  cochées ci-dessous
-                                </div>
-                                <div class="flex flex-col gap-1">
-                                  <!-- Cocher tout -->
-                                  <v-checkbox
-                                    v-model="columnsFilters[platform as keyof typeof columnsFilters]!.rawCheckAll"
-                                    label="Cocher tout"
-                                    density="compact"
-                                    hide-details
-                                    :indeterminate="columnsFilters[platform as keyof typeof columnsFilters]!.rawIndeterminate"
-                                  />
-                                  <v-divider class="my-1" />
-
-                                  <v-checkbox
-                                    v-for="header in Object.keys(columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters)"
-                                    :key="header"
-                                    v-model="columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters[header]"
-                                    :label="header"
-                                    density="compact"
-                                    hide-details
-                                  />
-                                </div>
-                              </v-expansion-panel-text>
-                            </v-expansion-panel>
-                          </v-expansion-panels>
+                          <AdvancedSearch
+                            :check-all="columnsFilters[platform as keyof typeof columnsFilters]!.rawCheckAll"
+                            :indeterminate="columnsFilters[platform as keyof typeof columnsFilters]!.rawIndeterminate"
+                            :headers="Object.keys(columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters)"
+                            :filters="columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters"
+                            @set-check-all="(e) => {
+                              columnsFilters[platform as keyof typeof columnsFilters]!.rawCheckAll = e
+                            }"
+                            @set-check="(e) => {
+                              columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters = {
+                                ...columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters,
+                                ...e,
+                              }
+                            }"
+                          />
                         </div>
 
                         <v-data-table
@@ -580,6 +536,11 @@ const files: {
 } = {};
 
 const columnsFilters = reactive<Partial<Record<Platform, FiltersGroup>>>({});
+const teleserviceColumnsFilters = reactive<Partial<Record<'teleservice', {
+  rawNightsActiveColumnsFilters: FiltersMaps;
+  rawCheckAll: WritableComputedRef<boolean>;
+  rawIndeterminate: ComputedRef<boolean>;
+}>>>({});
 
 // Computed pour cocher/décocher toutes les colonnes pour un type et une plateforme
 function createCheckAll(platform: Platform, type: FilterKey): {
@@ -775,7 +736,7 @@ const setFile = (
   const source = JSON.parse(JSON.stringify(teleservice.value));
   const inactiveSource = JSON.parse(JSON.stringify(teleserviceInactive.value));
   const dataset = JSON.parse(JSON.stringify(raw)).map(
-    (elem: object, index: number) => ({ ID: index, ...elem })
+    (elem: object, index: number) => ({ ID: index + 2, ...elem })
   );
 
   worker.postMessage({
@@ -788,6 +749,43 @@ const setFile = (
     streetNameCol,
   });
 };
+
+function setTeleserviceColumnsFilters(): void {
+  const checkAll = computed<boolean>({
+    get: () => {
+      const filters = teleserviceColumnsFilters['teleservice']?.rawNightsActiveColumnsFilters;
+      if (!filters) return false;
+      return (
+        Object.values(filters).length > 0 &&
+        Object.values(filters).every((v) => v)
+      );
+    },
+    set: (val: boolean) => {
+      const filters = teleserviceColumnsFilters['teleservice']?.rawNightsActiveColumnsFilters as
+        | Record<string, boolean>
+        | undefined;
+      if (!filters) return;
+      Object.keys(filters).forEach((key) => {
+        filters[key] = val;
+      });
+    },
+  }) as WritableComputedRef<boolean>;
+
+  const indeterminate = computed<boolean>(() => {
+    const filters = teleserviceColumnsFilters['teleservice']?.rawNightsActiveColumnsFilters;
+    if (!filters) return false;
+    const values = Object.values(filters);
+    return values.some((v) => v) && !values.every((v) => v);
+  });
+
+  teleserviceColumnsFilters['teleservice'] = {
+    rawNightsActiveColumnsFilters: Object.fromEntries(
+      Object.keys(teleservice.value![0] || {}).map((key) => [key, true])
+    ),
+    rawCheckAll: checkAll as unknown as boolean,
+    rawIndeterminate: indeterminate as unknown as boolean,
+  }
+}
 
 /**
  * Télécharge un tableau d'objets au format CSV
