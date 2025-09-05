@@ -198,7 +198,7 @@
                       </div>
 
                       <v-data-table
-                        v-model:search="unknownSearch"
+                        :search="unknownSearch.trim()"
                         :filter-keys="Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters)
                           .filter((key) => columnsFilters[item as keyof typeof columnsFilters]!.unknownNightsActiveColumnsFilters[key])"
                         :items="files[item as keyof typeof files]!.unknownNights"
@@ -269,7 +269,7 @@
                       </div>
 
                       <v-data-table
-                        v-model:search="duplicateSearch"
+                        :search="duplicateSearch.trim()"
                         :filter-keys="Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters)
                           .filter((key) => columnsFilters[item as keyof typeof columnsFilters]!.duplicateNightsActiveColumnsFilters[key])"
                         :items="files[item as keyof typeof files]!.duplicateNights"
@@ -342,7 +342,7 @@
                       </div>
 
                       <v-data-table
-                        v-model:search="invalidSearch"
+                        :search="invalidSearch.trim()"
                         :filter-keys="Object.keys(columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters)
                           .filter((key) => columnsFilters[item as keyof typeof columnsFilters]!.invalidNightsActiveColumnsFilters[key])"
                         :items="files[item as keyof typeof files]!.invalidNights"
@@ -393,7 +393,7 @@
                       </div>
 
                       <v-data-table
-                        v-model:search="crossplatformSearch"
+                        :search="crossplatformSearch.trim()"
                         :filter-keys="Object.keys(teleserviceColumnsFilters['teleservice' as keyof typeof teleserviceColumnsFilters]!.rawNightsActiveColumnsFilters)
                           .filter((key) => teleserviceColumnsFilters['teleservice' as keyof typeof teleserviceColumnsFilters]!.rawNightsActiveColumnsFilters[key])"
                         :items="teleservice!"
@@ -428,7 +428,7 @@
                         </div>
 
                         <v-data-table
-                          v-model:search="crossplatformSearch"
+                          :search="crossplatformSearch.trim()"
                           :filter-keys="Object.keys(columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters)
                             .filter((key) => columnsFilters[platform as keyof typeof columnsFilters]!.rawNightsActiveColumnsFilters[key])"
                           :items="files[platform as keyof typeof files]!.raw"
