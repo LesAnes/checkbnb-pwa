@@ -10,7 +10,8 @@
  */
 const isIdNumberValid = (id: string, postalCode: string | null = null): [boolean, 'format' | 'code postal' | null] => {
   if (!/^75\d{11}$/.test(id)) return [false, 'format'];
-  if (!postalCode) return [true, null]
+
+  if (!postalCode) return [true, null];
 
   // Extraire l'arrondissement depuis l'ID (4e et 5e chiffre)
   const arrondissementFromId = id.substring(3, 5);
